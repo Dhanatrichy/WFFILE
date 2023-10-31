@@ -104,28 +104,32 @@ class FileUploadingController extends Controller
 
             //echo "<pre>"; print_r($spreadsheet); die;
         
-        foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {
-            $pdf->AddPage($page_orientation, $page_size);
-            $pdf->SetFont('times', '', 12);
-            $data = $this->extractXLSXData($worksheet);
-            $contentHtml = view('pdf.template', compact('data'))->render();
-            $pdf->writeHTML($contentHtml);
-            $pdf->SetAutoPageBreak(true, 10);
-            $this->Footer($pdf);
-        }
+            foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {
+                $data = $this->extractXLSXData($worksheet);
+                
+                // Check if the worksheet has data
+                if (!empty($data)) {
+                    $pdf->AddPage($page_orientation, $page_size);
+                    $pdf->SetFont('times', '', 12);
+                    $contentHtml = view('pdf.template', compact('data'))->render();
+                    $pdf->writeHTML($contentHtml);
+                    $pdf->SetAutoPageBreak(true, 10);
+                    $this->Footer($pdf);
+                }
+            }
     }
 
-$downloadFile = "app/public/".$filesData['file_name'].".pdf";
+    $downloadFile = "app/public/".$filesData['file_name'].".pdf";
         
     $pdfFilePath = storage_path($downloadFile);
-    $pdf->Output($pdfFilePath, 'D');
+    $pdf->Output($pdfFilePath, 'F');
     // die("ssss");
    
     // Define the response headers for download
    // Define the response headers for download with a dynamic filename
    $responseHeaders = [
     'Content-Type' => 'application/pdf',
-    'Content-Disposition' => 'attachment; filename="' . $originalFilename . '.pdf"',
+    //'Content-Disposition' => 'attachment; filename="' . $originalFilename . '.pdf"',
 ];
 
 return response()->file($pdfFilePath, $responseHeaders);

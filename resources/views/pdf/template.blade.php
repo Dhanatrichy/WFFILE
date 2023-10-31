@@ -23,11 +23,10 @@
 </head>
 <body>
 <div>
-        <!-- <p style="border:2px solid #000080;border-radius:50%;"></p> -->
-        <hr style="height: 6px;background-color: #000080;border: none; border-radius:50%;" />
         
+        <hr style="height: 4px;background-color: #000080;border: none; border-radius:50%;margin-bottom:5px;" />
         <p></p>
-        <table style="margin-top:10px;">
+        <table style="margin-top:5px;">
             <tr>
                 <th>Ticket Number</th>
                 <th> Project Code</th>
