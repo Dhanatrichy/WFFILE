@@ -61,80 +61,65 @@ class FileUploadingController extends Controller
         return redirect()->route('fileUploads.index')->with('success', 'File uploaded successfully.');
     }
     
-    public function fileDownload($id)
-    {
+   public function fileDownload($id)
+{
+    $filesData = FileUpload::where('id', $id)->first();
 
-        $filesData = FileUpload::where('id',$id)->first();
-
-        $orientation = $filesData->page_orientation;
-        if($orientation == 'portrait'){
-            $page_orientation = 'P'; 
-        } else{
-            $page_orientation = 'L'; 
-        }
-
-        
-        $page_size = $filesData->page_size;
-        // $page_size = $filesData->page_size;
-
-        $file = storage_path('app/'.$filesData->file_path);
-       // echo $file; die;
-       
-        $pdf = new CustomTCPDF($page_size, $page_orientation);
-
-        $extension = pathinfo($file, PATHINFO_EXTENSION);
-
-        if($extension === 'doc' || $extension === 'docx'){
-            try {
-                $zip = new ZipArchive();
-                if ($zip->open($file) === true) {
-                    // Continue with your code to read the document
-                    $zip->close();
-                } else {
-                    throw new Exception("Failed to open the ZIP file.");
-                }
-            } catch (Exception $e) {
-                echo 'Error: ' . $e->getMessage();
-            }
-        //echo $text;
-        die();
-        }elseif($extension === 'xlsx' || $extension === 'xls'){
-           
-            $spreadsheet = IOFactory::load($file);
-
-            //echo "<pre>"; print_r($spreadsheet); die;
-        
-            foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {
-                $data = $this->extractXLSXData($worksheet);
-                
-                // Check if the worksheet has data
-                if (!empty($data)) {
-                    $pdf->AddPage($page_orientation, $page_size);
-                    $pdf->SetFont('times', '', 12);
-                    $contentHtml = view('pdf.template', compact('data'))->render();
-                    $pdf->writeHTML($contentHtml);
-                    $pdf->SetAutoPageBreak(true, 10);
-                    $this->Footer($pdf);
-                }
-            }
+    $orientation = $filesData->page_orientation;
+    if ($orientation == 'portrait') {
+        $page_orientation = 'P'; 
+    } else {
+        $page_orientation = 'L'; 
     }
 
-    $downloadFile = "app/public/".$filesData['file_name'].".pdf";
-        
+    $page_size = $filesData->page_size;
+    $file = storage_path('app/' . $filesData->file_path);
+
+    $pdf = new CustomTCPDF($page_size, $page_orientation);
+
+    $extension = pathinfo($file, PATHINFO_EXTENSION);
+
+    if ($extension === 'doc' || $extension === 'docx') {
+        try {
+            $zip = new ZipArchive();
+            if ($zip->open($file) === true) {
+                // Continue with your code to read the document
+                $zip->close();
+            } else {
+                throw new Exception("Failed to open the ZIP file.");
+            }
+        } catch (Exception $e) {
+            echo 'Error: ' . $e->getMessage();
+        }
+    } elseif ($extension === 'xlsx' || $extension === 'xls') {
+        $spreadsheet = IOFactory::load($file);
+
+        foreach ($spreadsheet->getWorksheetIterator() as $worksheet) {
+            $data = $this->extractXLSXData($worksheet);
+            
+            if (!empty($data)) {
+                $pdf->SetMargins(10, 200, 10);
+                $pdf->SetAutoPageBreak(true, 50); // Set a 150px margin between content and footer
+                $pdf->AddPage($page_orientation, $page_size);
+                $pdf->SetFont('times', '', 12);
+                $contentHtml = view('pdf.template', compact('data'))->render();
+                $pdf->writeHTML($contentHtml);
+            }
+        }
+    }
+
+    $downloadFile = "app/public/" . $filesData['file_name'] . ".pdf";
+    
     $pdfFilePath = storage_path($downloadFile);
     $pdf->Output($pdfFilePath, 'F');
-    // die("ssss");
-   
-    // Define the response headers for download
-   // Define the response headers for download with a dynamic filename
-   $responseHeaders = [
-    'Content-Type' => 'application/pdf',
-    //'Content-Disposition' => 'attachment; filename="' . $originalFilename . '.pdf"',
-];
+    
+    $responseHeaders = [
+        'Content-Type' => 'application/pdf',
+    ];
 
-return response()->file($pdfFilePath, $responseHeaders);
+    return response()->file($pdfFilePath, $responseHeaders);
+}
 
-    }
 
 
 
